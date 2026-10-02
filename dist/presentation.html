@@ -20,14 +20,14 @@ vulnerable, deployed by me for this demonstration, and contain no real data.</p>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="2" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="2" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="the-plan">The plan</h1>
 <ol>
-<li><strong>Definitions</strong> — the vocabulary, up front</li>
+<li><strong>Definitions</strong>, the vocabulary up front</li>
 <li><strong>The one idea</strong> behind all four bugs</li>
 <li><strong>Four applications</strong>, one each:
 <ul>
-<li>Session Forge — a forged identity</li>
-<li>Clearance — a query you should not have been able to write</li>
-<li>Reflector — code running in someone else's browser</li>
-<li>Keyring — a lock that accepts the wrong key</li>
+<li>Session Forge, a forged identity</li>
+<li>Clearance, a query you should not have been able to write</li>
+<li>Reflector, code running in someone else's browser</li>
+<li>Keyring, a lock that accepts the wrong key</li>
 </ul>
 </li>
 <li><strong>The fixes</strong>, one line each</li>
@@ -40,9 +40,9 @@ vulnerable, deployed by me for this demonstration, and contain no real data.</p>
 <p>A <strong>web application</strong> is a program you talk to over the network using HTTP.</p>
 <p>Two sides:</p>
 <ul>
-<li>The <strong>client</strong> — usually a browser. It sends requests and renders what comes<br />
+<li>The <strong>client</strong>, usually a browser. It sends requests and renders what comes<br />
 back.</li>
-<li>The <strong>server</strong> — your code. It receives the request, decides what to do, and<br />
+<li>The <strong>server</strong>, your code. It receives the request, decides what to do, and<br />
 returns a response.</li>
 </ul>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>browser  ────  GET /catalogue?category=Home  ────▶  server
@@ -90,7 +90,7 @@ returns a response.</li>
 <h1 id="definition-untrusted-input">Definition: untrusted input</h1>
 <p><strong>Untrusted input</strong> is any value that reached your server without your code<br />
 creating it.</p>
-<p>Form fields, query strings, cookies, headers, JSON bodies, file names — all of<br />
+<p>Form fields, query strings, cookies, headers, JSON bodies, file names. All of<br />
 it. So is anything derived from it.</p>
 <blockquote>
 <p>The rule this talk is built on: <strong>input is data, never instructions.</strong></p>
@@ -100,9 +100,9 @@ verification routine, the input has become instructions.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="6" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="6" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="definition-authentication-and-authorisation">Definition: authentication and authorisation</h1>
-<p><strong>Authentication</strong> — <em>who are you?</em><br />
+<p><strong>Authentication</strong>: <em>who are you?</em><br />
 Proves an identity. Password, multi-factor code, passkey.</p>
-<p><strong>Authorisation</strong> — <em>what may you do?</em><br />
+<p><strong>Authorisation</strong>: <em>what may you do?</em><br />
 Decides whether that identity may perform this action.</p>
 <p>They are different questions, and confusing them is common:</p>
 <ul>
@@ -116,7 +116,7 @@ a check.</li>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="7" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="7" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="definition-session-and-cookie">Definition: session and cookie</h1>
 <p>The server must remember who you are across requests. HTTP does not do this<br />
-natively — each request stands alone.</p>
+natively. Each request stands alone.</p>
 <p><strong>Server-side session:</strong> the server keeps the state, the browser holds an<br />
 opaque reference (a random string) in a <strong>cookie</strong>.</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>cookie: session=8f2a91c4…      ← meaningless on its own, a lookup key
@@ -131,9 +131,9 @@ server: session store maps 8f2a91c4 → { user: wiener }
 └──── header ────┘   └──── payload ────┘   └─ signature ─┘
 </code></pre>
 <ul>
-<li><strong>header</strong> — metadata, including which algorithm signed it</li>
-<li><strong>payload</strong> — the claims: <code>sub</code> (subject, the user), <code>exp</code> (expiry), <code>role</code></li>
-<li><strong>signature</strong> — proof the token was not altered</li>
+<li><strong>header</strong>: metadata, including which algorithm signed it</li>
+<li><strong>payload</strong>: the claims: <code>sub</code> (subject, the user), <code>exp</code> (expiry), <code>role</code></li>
+<li><strong>signature</strong>: proof the token was not altered</li>
 </ul>
 <p>A <strong>claim</strong> is a key/value statement inside the payload. <code>sub: &quot;wiener&quot;</code> is a<br />
 claim. So is <code>role: &quot;administrator&quot;</code>.</p>
@@ -159,7 +159,7 @@ a secret key, and it has not changed since.</p>
 signature     = base64url( HMAC-SHA256( secret_key , signing_input ) )
 </code></pre>
 <p>To verify, the server recomputes the same value with its own key and compares<br />
-it <strong>in constant time</strong> — a comparison that takes the same time whether it<br />
+it <strong>in constant time</strong>: a comparison that takes the same time whether it<br />
 matches or not, so it cannot be timed to leak the answer.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="11" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="11" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
@@ -239,7 +239,7 @@ concludes the token is genuine.</p>
 <p>All four: Next.js, SQLite, deployed on Vercel, and reachable now.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="13" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="13" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-1--session-forge">Demo 1 — Session Forge</h1>
+<h1 id="demo-1-session-forge">Demo 1: Session Forge</h1>
 <p><strong><code>https://northwind-01-session-forge.vercel.app</code></strong></p>
 <p>Sign in as a normal employee. The goal is the administration page.</p>
 <p>Here is the entire verification function:</p>
@@ -249,10 +249,10 @@ concludes the token is genuine.</p>
 <span class="hljs-keyword">if</span> (header.<span class="hljs-property">alg</span> !== <span class="hljs-string">&#x27;HS256&#x27;</span>) <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
 </code></pre>
 <p><code>alg</code> comes from the token. The attacker edits the header, so the attacker<br />
-chooses which branch runs — and picks the one that skips verification.</p>
+chooses which branch runs, and picks the one that skips verification.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="14" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="14" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-1--the-attack">Demo 1 — the attack</h1>
+<h1 id="demo-1-the-attack">Demo 1: the attack</h1>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">BASE=https://northwind-01-session-forge.vercel.app \
   bash apps/solve/solve-01.sh
 </code></pre>
@@ -267,7 +267,7 @@ emptied, trailing dot kept. <strong>No cryptography is performed.</strong></li>
 one to a server that never checked.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="15" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="15" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-1--the-fix">Demo 1 — the fix</h1>
+<h1 id="demo-1-the-fix">Demo 1: the fix</h1>
 <p>Delete the branch that trusts the token's <code>alg</code>:</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-js"><span class="hljs-keyword">if</span> (header.<span class="hljs-property">alg</span> !== <span class="hljs-string">&#x27;HS256&#x27;</span>) <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>;
 </code></pre>
@@ -282,9 +282,9 @@ token.</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-sql"><span class="hljs-keyword">SELECT</span> sku, name, price <span class="hljs-keyword">FROM</span> products <span class="hljs-keyword">WHERE</span> category <span class="hljs-operator">=</span> <span class="hljs-string">&#x27;Home&#x27;</span>;
 </code></pre>
 <ul>
-<li><strong>SELECT … FROM</strong> — which columns, from which table</li>
-<li><strong>WHERE</strong> — which rows</li>
-<li><code>'Home'</code> — a <strong>string literal</strong>: text, quoted, not a command</li>
+<li><strong>SELECT … FROM</strong>: which columns, from which table</li>
+<li><strong>WHERE</strong>: which rows</li>
+<li><code>'Home'</code>: a <strong>string literal</strong>: text, quoted, not a command</li>
 </ul>
 <p>A <strong>table</strong> is rows and columns; here, one row per product.</p>
 </section>
@@ -308,7 +308,7 @@ separately:</p>
 </code></pre>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="18" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="18" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-2--clearance">Demo 2 — Clearance</h1>
+<h1 id="demo-2-clearance">Demo 2: Clearance</h1>
 <p><strong><code>https://northwind-02-clearance.vercel.app</code></strong></p>
 <p>No login needed. The catalogue filter is the whole target.</p>
 <p>With <code>category</code> set to <code>Home' OR 1=1--</code>:</p>
@@ -331,7 +331,7 @@ separately:</p>
 the clearance filter survived the comment and the attack silently returned<br />
 only public rows. It looked like the exploit had failed.</p>
 <p><strong>A <code>UNION</code> needs matching column counts</strong> or SQLite rejects the whole<br />
-statement — so the injected <code>SELECT</code> must project exactly as many columns as<br />
+statement, so the injected <code>SELECT</code> must project exactly as many columns as<br />
 the original.</p>
 <p>That second one turns a bypass into arbitrary read:</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>x' UNION SELECT sql,name,type,name,0 FROM sqlite_master WHERE type='table'--
@@ -339,7 +339,7 @@ the original.</p>
 <p>That reads the database's own schema. Arbitrary read, not just a bypass.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="20" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="20" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-2--the-fix">Demo 2 — the fix</h1>
+<h1 id="demo-2-the-fix">Demo 2: the fix</h1>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-js"><span class="hljs-keyword">const</span> sql = <span class="hljs-string">`SELECT … WHERE category = ? AND classification = &#x27;public&#x27; ORDER BY id`</span>;
 rows = db.<span class="hljs-title function_">prepare</span>(sql).<span class="hljs-title function_">all</span>(category);
 </code></pre>
@@ -351,7 +351,7 @@ Parameterisation is the actual control.</p>
 blacklisting <code>OR</code> and <code>UNION</code> is a losing game.</p>
 </blockquote>
 <p>Also: this app returns the database error to the user. That is a second<br />
-finding — it turns a blind injection into a verbose one.</p>
+finding. It turns a blind injection into a verbose one.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="21" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="21" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="definition-html-and-parsing">Definition: HTML and parsing</h1>
@@ -397,12 +397,12 @@ correct encoding for HTML text is not the one for a JavaScript string, an<br />
 attribute value, or a URL.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="23" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="23" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-3--reflector">Demo 3 — Reflector</h1>
+<h1 id="demo-3-reflector">Demo 3: Reflector</h1>
 <p><strong><code>https://northwind-03-reflector.vercel.app</code></strong></p>
 <p>The search box reflects your query into the results heading with no encoding.</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">BASE=https://northwind-03-reflector.vercel.app python3 apps/solve/solve-03.py
 </code></pre>
-<p>The payload calls the settlement console — which refuses requests from a<br />
+<p>The payload calls the settlement console, which refuses requests from a<br />
 terminal:</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code>HTTP 403  administrator session required
 </code></pre>
@@ -434,7 +434,7 @@ browser, with their privileges.</p>
 conflating them is common.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="26" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="26" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-3--the-fix">Demo 3 — the fix</h1>
+<h1 id="demo-3-the-fix">Demo 3: the fix</h1>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-js">&amp;ldquo;${<span class="hljs-title function_">escapeHtml</span>(query)}&amp;rdquo;
 </code></pre>
 <p>One call. Behind it, a second layer: a <strong>Content Security Policy</strong> forbidding<br />
@@ -446,14 +446,14 @@ inline script would have blocked this payload regardless of encoding.</p>
 <p>A <strong>JWK</strong> (JSON Web Key) is a standard way to write a key as JSON.</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-json"><span class="hljs-punctuation">{</span> <span class="hljs-attr">&quot;kty&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;oct&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;kid&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;attacker&quot;</span><span class="hljs-punctuation">,</span> <span class="hljs-attr">&quot;k&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span> <span class="hljs-punctuation">}</span>
 </code></pre>
-<p>The <code>kid</code> (<strong>key ID</strong>) names which key signed a token — a legitimate feature<br />
+<p>The <code>kid</code> (<strong>key ID</strong>) names which key signed a token. A legitimate feature<br />
 for servers holding several keys.</p>
 <p>The mistake is trusting the token to say <strong>which key verifies it</strong>. An empty<br />
 key is a perfectly valid HMAC secret, so a token signed with the empty string<br />
 verifies.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="28" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="28" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
-<h1 id="demo-4--keyring">Demo 4 — Keyring</h1>
+<h1 id="demo-4-keyring">Demo 4: Keyring</h1>
 <p><strong><code>https://northwind-04-keyring.vercel.app</code></strong></p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-js"><span class="hljs-keyword">if</span> (header.<span class="hljs-property">jwk</span> &amp;&amp; <span class="hljs-keyword">typeof</span> header.<span class="hljs-property">jwk</span>.<span class="hljs-property">k</span> === <span class="hljs-string">&#x27;string&#x27;</span>) {
   <span class="hljs-keyword">const</span> embedded = <span class="hljs-title function_">createHmac</span>(<span class="hljs-string">&#x27;sha256&#x27;</span>, header.<span class="hljs-property">jwk</span>.<span class="hljs-property">k</span>).<span class="hljs-title function_">update</span>(input).<span class="hljs-title function_">digest</span>();
@@ -505,7 +505,7 @@ address.</p>
 </table>
 <p>Thirteen automated checks pass against the live deployments<br />
 (<code>apps/solve/verify.sh</code>), including an assertion that the deployed builds are<br />
-the <strong>vulnerable</strong> ones — so the demonstrations cannot silently stop working.</p>
+the <strong>vulnerable</strong> ones, so the demonstrations cannot silently stop working.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="30" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="30" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="how-to-defend-in-order-of-value">How to defend, in order of value</h1>
@@ -525,7 +525,7 @@ the <strong>vulnerable</strong> ones — so the demonstrations cannot silently s
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="31" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="31" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="what-to-take-away">What to take away</h1>
 <ul>
-<li><strong>Never trust a claim you have not verified</strong> — including one the client<br />
+<li><strong>Never trust a claim you have not verified</strong>, including one the client<br />
 wrote for you.</li>
 <li>The client is not part of your program. Everything it sends is input.</li>
 <li><strong>Authorisation is not authentication.</strong> Signing in proves nothing about<br />
@@ -540,18 +540,18 @@ permission.</li>
 <blockquote>
 <p>Input is data. Never instructions.</p>
 </blockquote>
-<p>Everything in the next hour is a consequence of breaking that rule — in a<br />
+<p>Everything in the next hour is a consequence of breaking that rule: in a<br />
 token header, in a SQL string, in an HTML page, and in a key lookup.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="33" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="33" style="--paginate:true;--theme:default;" data-marpit-pagination-total="34">
 <h1 id="resources">Resources</h1>
 <ul>
-<li><strong>PortSwigger Web Security Academy</strong> — free, legal labs:<br />
+<li><strong>PortSwigger Web Security Academy</strong>, free legal labs:<br />
 <a href="https://portswigger.net/web-security">https://portswigger.net/web-security</a></li>
-<li><strong>OWASP Cheat Sheet Series</strong> — the practical reference:<br />
+<li><strong>OWASP Cheat Sheet Series</strong>, the practical reference:<br />
 <a href="https://cheatsheetseries.owasp.org">https://cheatsheetseries.owasp.org</a></li>
 <li><strong>RFC 7519</strong> (JWT), <strong>RFC 7515</strong> (JWS)</li>
-<li><strong>MDN</strong> — HTTP, cookies, CSP, CORS</li>
+<li><strong>MDN</strong>: HTTP, cookies, CSP, CORS</li>
 <li>Four of these challenges have public write-ups in this repository</li>
 </ul>
 </section>

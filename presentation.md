@@ -29,13 +29,13 @@ also a reference you can come back to.
 
 # The plan
 
-1. **Definitions** — the vocabulary, up front
+1. **Definitions**, the vocabulary up front
 2. **The one idea** behind all four bugs
 3. **Four applications**, one each:
-   - Session Forge — a forged identity
-   - Clearance — a query you should not have been able to write
-   - Reflector — code running in someone else's browser
-   - Keyring — a lock that accepts the wrong key
+   - Session Forge, a forged identity
+   - Clearance, a query you should not have been able to write
+   - Reflector, code running in someone else's browser
+   - Keyring, a lock that accepts the wrong key
 4. **The fixes**, one line each
 5. **Defending properly**
 
@@ -54,9 +54,9 @@ A **web application** is a program you talk to over the network using HTTP.
 
 Two sides:
 
-- The **client** — usually a browser. It sends requests and renders what comes
+- The **client**, usually a browser. It sends requests and renders what comes
   back.
-- The **server** — your code. It receives the request, decides what to do, and
+- The **server**, your code. It receives the request, decides what to do, and
   returns a response.
 
 ```
@@ -99,7 +99,7 @@ bypass. Hold that thought for demo one.
 **Untrusted input** is any value that reached your server without your code
 creating it.
 
-Form fields, query strings, cookies, headers, JSON bodies, file names — all of
+Form fields, query strings, cookies, headers, JSON bodies, file names. All of
 it. So is anything derived from it.
 
 > The rule this talk is built on: **input is data, never instructions.**
@@ -117,10 +117,10 @@ instructions.
 
 # Definition: authentication and authorisation
 
-**Authentication** — *who are you?*
+**Authentication**: *who are you?*
 Proves an identity. Password, multi-factor code, passkey.
 
-**Authorisation** — *what may you do?*
+**Authorisation**: *what may you do?*
 Decides whether that identity may perform this action.
 
 They are different questions, and confusing them is common:
@@ -142,7 +142,7 @@ credentials.
 # Definition: session and cookie
 
 The server must remember who you are across requests. HTTP does not do this
-natively — each request stands alone.
+natively. Each request stands alone.
 
 **Server-side session:** the server keeps the state, the browser holds an
 opaque reference (a random string) in a **cookie**.
@@ -172,9 +172,9 @@ eyJhbGciOiJIUzI1NiJ9 . eyJzdWIiOiJ3aWVuZXIifQ . 7Vm1k2l…
 └──── header ────┘   └──── payload ────┘   └─ signature ─┘
 ```
 
-- **header** — metadata, including which algorithm signed it
-- **payload** — the claims: `sub` (subject, the user), `exp` (expiry), `role`
-- **signature** — proof the token was not altered
+- **header**: metadata, including which algorithm signed it
+- **payload**: the claims: `sub` (subject, the user), `exp` (expiry), `role`
+- **signature**: proof the token was not altered
 
 A **claim** is a key/value statement inside the payload. `sub: "wiener"` is a
 claim. So is `role: "administrator"`.
@@ -219,7 +219,7 @@ signature     = base64url( HMAC-SHA256( secret_key , signing_input ) )
 ```
 
 To verify, the server recomputes the same value with its own key and compares
-it **in constant time** — a comparison that takes the same time whether it
+it **in constant time**: a comparison that takes the same time whether it
 matches or not, so it cannot be timed to leak the answer.
 
 <!--
@@ -273,7 +273,7 @@ are not four aliases of one lab. Same underlying idea each time.
 
 ---
 
-# Demo 1 — Session Forge
+# Demo 1: Session Forge
 
 **`https://northwind-01-session-forge.vercel.app`**
 
@@ -289,7 +289,7 @@ if (header.alg !== 'HS256') return null;
 ```
 
 `alg` comes from the token. The attacker edits the header, so the attacker
-chooses which branch runs — and picks the one that skips verification.
+chooses which branch runs, and picks the one that skips verification.
 
 <!--
 Count the lines. The whole authorisation boundary in this application is one
@@ -298,7 +298,7 @@ comparison. Emphasise how little code has to be exactly right.
 
 ---
 
-# Demo 1 — the attack
+# Demo 1: the attack
 
 ```bash
 BASE=https://northwind-01-session-forge.vercel.app \
@@ -321,7 +321,7 @@ maths whatsoever is the memorable moment.
 
 ---
 
-# Demo 1 — the fix
+# Demo 1: the fix
 
 Delete the branch that trusts the token's `alg`:
 
@@ -345,9 +345,9 @@ token.
 SELECT sku, name, price FROM products WHERE category = 'Home';
 ```
 
-- **SELECT … FROM** — which columns, from which table
-- **WHERE** — which rows
-- `'Home'` — a **string literal**: text, quoted, not a command
+- **SELECT … FROM**: which columns, from which table
+- **WHERE**: which rows
+- `'Home'`: a **string literal**: text, quoted, not a command
 
 A **table** is rows and columns; here, one row per product.
 
@@ -391,7 +391,7 @@ defence away, take this one.
 
 ---
 
-# Demo 2 — Clearance
+# Demo 2: Clearance
 
 **`https://northwind-02-clearance.vercel.app`**
 
@@ -430,7 +430,7 @@ the clearance filter survived the comment and the attack silently returned
 only public rows. It looked like the exploit had failed.
 
 **A `UNION` needs matching column counts** or SQLite rejects the whole
-statement — so the injected `SELECT` must project exactly as many columns as
+statement, so the injected `SELECT` must project exactly as many columns as
 the original.
 
 That second one turns a bypass into arbitrary read:
@@ -448,7 +448,7 @@ are here so nobody in the audience loses twenty minutes to them.
 
 ---
 
-# Demo 2 — the fix
+# Demo 2: the fix
 
 ```js
 const sql = `SELECT … WHERE category = ? AND classification = 'public' ORDER BY id`;
@@ -464,7 +464,7 @@ Parameterisation is the actual control.
 > blacklisting `OR` and `UNION` is a losing game.
 
 Also: this app returns the database error to the user. That is a second
-finding — it turns a blind injection into a verbose one.
+finding. It turns a blind injection into a verbose one.
 
 ---
 
@@ -516,7 +516,7 @@ you encode on the way out. Repeat that twice.
 
 ---
 
-# Demo 3 — Reflector
+# Demo 3: Reflector
 
 **`https://northwind-03-reflector.vercel.app`**
 
@@ -526,7 +526,7 @@ The search box reflects your query into the results heading with no encoding.
 BASE=https://northwind-03-reflector.vercel.app python3 apps/solve/solve-03.py
 ```
 
-The payload calls the settlement console — which refuses requests from a
+The payload calls the settlement console, which refuses requests from a
 terminal:
 
 ```
@@ -572,7 +572,7 @@ conflating them is common.
 
 ---
 
-# Demo 3 — the fix
+# Demo 3: the fix
 
 ```js
 &ldquo;${escapeHtml(query)}&rdquo;
@@ -593,7 +593,7 @@ A **JWK** (JSON Web Key) is a standard way to write a key as JSON.
 { "kty": "oct", "kid": "attacker", "k": "" }
 ```
 
-The `kid` (**key ID**) names which key signed a token — a legitimate feature
+The `kid` (**key ID**) names which key signed a token. A legitimate feature
 for servers holding several keys.
 
 The mistake is trusting the token to say **which key verifies it**. An empty
@@ -607,7 +607,7 @@ uses. That is the whole defect.
 
 ---
 
-# Demo 4 — Keyring
+# Demo 4: Keyring
 
 **`https://northwind-04-keyring.vercel.app`**
 
@@ -649,7 +649,7 @@ identically everywhere.
 
 Thirteen automated checks pass against the live deployments
 (`apps/solve/verify.sh`), including an assertion that the deployed builds are
-the **vulnerable** ones — so the demonstrations cannot silently stop working.
+the **vulnerable** ones, so the demonstrations cannot silently stop working.
 
 <!--
 State plainly which direction each control works. If a control only makes an
@@ -675,7 +675,7 @@ exploit harder rather than impossible, say so.
 
 # What to take away
 
-- **Never trust a claim you have not verified** — including one the client
+- **Never trust a claim you have not verified**, including one the client
   wrote for you.
 - The client is not part of your program. Everything it sends is input.
 - **Authorisation is not authentication.** Signing in proves nothing about
@@ -690,19 +690,19 @@ exploit harder rather than impossible, say so.
 
 > Input is data. Never instructions.
 
-Everything in the next hour is a consequence of breaking that rule — in a
+Everything in the next hour is a consequence of breaking that rule: in a
 token header, in a SQL string, in an HTML page, and in a key lookup.
 
 ---
 
 # Resources
 
-- **PortSwigger Web Security Academy** — free, legal labs:
+- **PortSwigger Web Security Academy**, free legal labs:
   https://portswigger.net/web-security
-- **OWASP Cheat Sheet Series** — the practical reference:
+- **OWASP Cheat Sheet Series**, the practical reference:
   https://cheatsheetseries.owasp.org
 - **RFC 7519** (JWT), **RFC 7515** (JWS)
-- **MDN** — HTTP, cookies, CSP, CORS
+- **MDN**: HTTP, cookies, CSP, CORS
 - Four of these challenges have public write-ups in this repository
 
 ---

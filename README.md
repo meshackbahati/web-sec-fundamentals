@@ -1,4 +1,4 @@
-# Northwind Supply Co. — four deliberately vulnerable web applications
+# Northwind Supply Co.: four deliberately vulnerable web applications
 
 A storefront used as a live teaching target. Four independent Next.js
 applications, each built around one mechanism, each deployed as its own
@@ -176,6 +176,14 @@ select from an allow-list, never from a namespace the attacker can address.
 | 02 | replace the concatenated statement with a `?` placeholder and bind the value |
 | 03 | pass the query through `escapeHtml()` before it reaches the document |
 | 04 | verify only with the server's own key, never one the token carries |
+
+---
+
+## Write-up
+
+**[`apps/CHALLENGES.md`](apps/CHALLENGES.md)** covers all four applications:
+the mechanism behind each defect, the attack, the fix, and the unintended paths
+that were closed. The presentation is `presentation.md`.
 
 ---
 
