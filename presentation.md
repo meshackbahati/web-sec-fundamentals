@@ -25,10 +25,10 @@ The trust boundary is different each time.
 
 | | What is trusted unverified |
 |---|---|
-| 01 JWT | the algorithm named inside the token |
-| 02 SQL | whether input is data or statement text |
-| 03 XSS | whether input is text or markup |
-| 04 Keys | the token's `kid` as a key identifier |
+| 01 Session Forge | the algorithm named inside the token |
+| 02 Clearance | whether input is data or statement text |
+| 03 Reflector | whether input is text or markup |
+| 04 Keyring | the verification key carried by the token |
 
 The goal is not the flag. It is that you can break it, read the line that
 made it break, fix it, and watch the same attack fail.
@@ -43,9 +43,9 @@ made it break, fix it, and watch the same attack fail.
 - No containers, no dependencies to install
 
 ```bash
-cd northwind-lab/challenges
-bash dev-up.sh        # ports 8801-8804
-bash verify-fixes.sh  # attack, then fix, then attack again
+cd apps/01-session-forge
+FLAG_JWT=... npm run dev
+bash apps/solve/verify.sh  # the four public targets
 ```
 
 ---
@@ -107,7 +107,7 @@ Fix: pin the algorithm server-side.
 
 # Demo 1 — JWT forgery
 
-**https://northwind-01-jwt-forgery.vercel.app**
+**https://northwind-01-session-forge.vercel.app**
 
 Target: the session cookie. Goal: the admin area.
 
@@ -125,8 +125,8 @@ One branch. That is the whole vulnerability.
 # Demo 1 — the attack
 
 ```bash
-BASE=https://northwind-01-jwt-forgery.vercel.app \
-  bash 01-jwt-forgery/solution/solve.sh
+BASE=https://northwind-01-session-forge.vercel.app \
+  bash apps/solve/solve-01.sh
 ```
 
 What happens:
@@ -153,7 +153,7 @@ if (header.alg !== 'HS256') return null;
 Better still: pin the algorithm in library options rather than in your own
 code, and reject `none` outright.
 
-`verify-fixes.sh` replays this exact attack against the patched copy. It fails.
+`apps/solve/verify.sh` replays this exact attack against the patched copy. It fails.
 
 ---
 
@@ -201,12 +201,12 @@ That reads the schema instead of the rows — arbitrary read, not just a bypass.
 
 # Demo 2 — SQL injection
 
-**https://northwind-02-sqli.vercel.app**
+**https://northwind-02-clearance.vercel.app**
 
 No login needed. The catalogue filter is the whole target.
 
 ```bash
-BASE=https://northwind-02-sqli.vercel.app bash 02-sqli/solution/solve.sh
+BASE=https://northwind-02-clearance.vercel.app bash apps/solve/solve-02.sh
 ```
 
 Legitimate filter → 4 public lines.
@@ -249,12 +249,12 @@ one for a JavaScript string, an attribute value, or a URL.
 
 # Demo 3 — Cross-site scripting
 
-**https://northwind-03-xss.vercel.app**
+**https://northwind-03-reflector.vercel.app**
 
 The search box reflects the query into the results heading with no encoding.
 
 ```bash
-BASE=https://northwind-03-xss.vercel.app python3 03-xss/solution/solve.py
+BASE=https://northwind-03-reflector.vercel.app python3 apps/solve/solve-03.py
 ```
 
 The payload calls the settlement console the way the site's own front end
@@ -298,18 +298,21 @@ Encoding is the fix. CSP is the belt.
 
 # Demo 4 — the token picks the key
 
-**https://northwind-04-jwt-kid-injection.vercel.app**
+**https://northwind-04-keyring.vercel.app**
 
-`kid` exists so a server with several keys can say which one signed a token.
-Here it is concatenated into a path with no normalisation and no confinement:
+A token may nominate the key that verifies it. Here the header carries an
+embedded JWK, and the server verifies with that key instead of its own:
 
 ```js
-readFileSync(KEY_ROOT + kid)
+if (header.jwk && typeof header.jwk.k === 'string') {
+  const embedded = createHmac('sha256', header.jwk.k).update(input).digest();
+  /* compare against the token's signature */
+}
 ```
 
-`kid` = `../../../../dev/null` reads an **empty file**, so the HMAC key is the
-empty string — and an HMAC over known input under a known key is computable by
-anyone.
+An **empty key is a perfectly good HMAC secret**, so a token signed with the
+empty string verifies. The attacker never learns the server's key; they simply
+supply the one the check uses.
 
 General rule: identifiers from untrusted input may select from an allow-list,
 never from a namespace the attacker can address.
@@ -323,9 +326,9 @@ never from a namespace the attacker can address.
 | 01 forged `alg:none` token | flag | rejected |
 | 02 `OR 1=1` tautology | flag | treated as data |
 | 03 reflected script | flag | encoded |
-| 04 `kid` path traversal | flag | key no longer chosen |
+| 04 embedded JWK | flag | key no longer chosen |
 
-Eight checks, all green, run by `verify-fixes.sh` on every run.
+Thirteen checks, all green, run by `apps/solve/verify.sh` on every run.
 
 ---
 

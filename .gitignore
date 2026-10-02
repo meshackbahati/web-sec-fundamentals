@@ -3,17 +3,14 @@
 .env.*
 !.env.example
 
-# Local run artefacts
-**/.run/
+# Build output and dependencies
 **/node_modules/
 **/.next/
 **/out/
+**/.vercel/
 *.tsbuildinfo
-__pycache__/
 
 # Screenshots capture the flag in the page title; excluded deliberately.
-**/solution/*.png
+apps/solve/*.png
 
-# Vercel project links
-**/.vercel/
-.vercel
+__pycache__/
