@@ -8,7 +8,7 @@ paginate: true
 
 ## Four real applications, four broken trust boundaries
 
-Presenter / date
+**Bahati** · Saturday 3 October 2026
 
 > Authorised testing only. The four applications in this talk are deliberately
 > vulnerable, deployed by me for this demonstration, and contain no real data.
