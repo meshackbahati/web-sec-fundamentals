@@ -15,6 +15,21 @@ defect rather than four divergent code bases.
 Each application is named after its role, not after its vulnerability, so the
 defect is something a reader finds rather than something a label announces.
 
+## Write-ups
+
+Each application carries its own write-up beside its code, so the explanation
+of a defect lives where the defect is:
+
+- [`01-session-forge/WRITEUP.md`](01-session-forge/WRITEUP.md)
+- [`02-clearance/WRITEUP.md`](02-clearance/WRITEUP.md)
+- [`03-reflector/WRITEUP.md`](03-reflector/WRITEUP.md)
+- [`04-keyring/WRITEUP.md`](04-keyring/WRITEUP.md)
+
+Each covers the statement, the commands used to solve it, the running source
+of the defect, the fix, and the unintended paths that were closed. A combined
+version, with the shared mechanisms gathered in one place, is in
+[`CHALLENGES.md`](CHALLENGES.md).
+
 ## Working on them
 
 ```bash
