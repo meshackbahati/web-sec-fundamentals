@@ -1,0 +1,15 @@
+# Real flag values and signing secrets never enter version control.
+.env
+.env.*
+!.env.example
+
+# Local run artefacts
+**/.run/
+**/node_modules/
+__pycache__/
+
+# Screenshots capture the flag in the page title; excluded deliberately.
+**/solution/*.png
+
+# Vercel project links
+**/.vercel/
