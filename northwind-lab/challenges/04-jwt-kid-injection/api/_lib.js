@@ -17,7 +17,7 @@
 
 import { DatabaseSync } from 'node:sqlite';
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // ---------------------------------------------------------------------------
@@ -68,10 +68,43 @@ const ACCEPTED_ALGORITHM = 'HS256';
 // path separator because verifyToken concatenates it with `kid` directly.
 const DEFAULT_KEY_ID = process.env.KEY_ID ?? 'key-2026-01.key';
 
+// Deliberately unconfigured placeholder, seeded next to the key directory.
+const PLACEHOLDER_KEY_ID = process.env.PLACEHOLDER_KEY_ID ?? 'key-2026-02.key';
+
 // Resolved to an absolute path at import time so the key lookup behaves the
 // same on a laptop and on a serverless runtime whose working directory
 // differs. The concatenation in verifyToken remains the defect.
 const KEY_ROOT = resolve(process.env.KEY_DIR ?? './keys') + '/';
+
+// The default signing key is created on first use instead of shipped in the
+// bundle, because a serverless deployment does not reliably include extra
+// directories in the function bundle. The traversal defect below is
+// unaffected: it does not depend on this key existing.
+function ensureDefaultKey() {
+  try {
+    mkdirSync(KEY_ROOT, { recursive: true });
+    if (!existsSync(KEY_ROOT + DEFAULT_KEY_ID)) {
+      writeFileSync(KEY_ROOT + DEFAULT_KEY_ID, randomBytes(32).toString('hex'), { mode: 0o600 });
+    }
+
+    // The placeholder is provisioned independently of the real key. Seeding it
+    // inside the branch above left it missing whenever /tmp was reused and the
+    // real key already existed, so the traversal target disappeared on exactly
+    // the instances that had been running a while.
+    //
+    // An unconfigured placeholder key sits one directory above the key
+    // directory. The platform must never read it, but it exists, it is empty,
+    // and a `kid` that climbs out of the key directory can reach it. Hosted
+    // runtimes block reads outside their writable tree, so the traversal has
+    // to stay within that tree to be demonstrable at all.
+    const parent = KEY_ROOT.replace(/\/keys\/$/, '/');
+    if (!existsSync(parent + PLACEHOLDER_KEY_ID)) {
+      writeFileSync(parent + PLACEHOLDER_KEY_ID, '', { mode: 0o600 });
+    }
+  } catch {
+    // A read-only filesystem is not fatal: any key already present still works.
+  }
+}
 
 function signingSecret() {
   return process.env.JWT_SECRET ?? 'northwind-lab-signing-key';
@@ -91,6 +124,7 @@ export function issueToken(claims, { ttlSeconds = 3600, kid } = {}) {
   const input = `${encodedHeader}.${encodedPayload}`;
   // The signing key is located the same way the verifier locates it: by the
   // `kid` recorded in the header. Both halves trusting `kid` is the defect.
+  ensureDefaultKey();
   const key = readFileSync(KEY_ROOT + String(header.kid ?? ''), 'utf8');
   const signature = createHmac(HMAC_ALGORITHM, key).update(input).digest('base64url');
   return `${input}.${signature}`;

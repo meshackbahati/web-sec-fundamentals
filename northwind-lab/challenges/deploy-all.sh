@@ -7,7 +7,11 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$here"
+# The Vercel projects each have a Git root directory pointing at their own
+# challenge folder, so the upload must contain the whole repository. Deploying
+# from inside a challenge folder fails with "Root Directory does not exist".
+repo="$(cd "$here/../.." && pwd)"
+cd "$repo"
 
 if [ -f .env ]; then set -a; . ./.env; set +a; fi
 
@@ -29,11 +33,14 @@ declare -A FLAGS=(
 
 for challenge in 01-jwt-forgery 02-sqli 03-xss 04-jwt-kid-injection; do
   echo "### $challenge"
-  cd "$here/$challenge"
 
-  # First deployment establishes the project so environment variables can be
-  # attached to it.
-  vercel deploy --prod --yes --name "northwind-$challenge" 2>&1 | grep -E 'Production|Error' | tail -1
+  # The project link lives beside the challenge; its ids let the CLI target the
+  # project while running from the repository root.
+  link="$here/$challenge/.vercel/project.json"
+  org_id=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['orgId'])" "$link")
+  project_id=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['projectId'])" "$link")
+
+  export VERCEL_ORG_ID="$org_id" VERCEL_PROJECT_ID="$project_id"
 
   var="${FLAGS[$challenge]}"
   printf '%s' "${!var}" \
@@ -45,10 +52,9 @@ for challenge in 01-jwt-forgery 02-sqli 03-xss 04-jwt-kid-injection; do
 
   # Challenge 04 resolves signing keys from KEY_DIR at runtime.
   if [ "$challenge" = "04-jwt-kid-injection" ]; then
-    printf '%s' "./keys/" | vercel env add KEY_DIR production --yes 2>&1 >/dev/null || true
+     printf '%s' "/tmp/northwind-keys/keys/" | vercel env add KEY_DIR production --yes 2>&1 >/dev/null || true
     printf '%s' "key-2026-01.key" | vercel env add KEY_ID production --yes 2>&1 >/dev/null || true
   fi
 
   vercel deploy --prod --yes 2>&1 | grep -E 'Production|Error' | tail -1
-  cd "$here"
 done

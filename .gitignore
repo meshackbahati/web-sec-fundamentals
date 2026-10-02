@@ -6,6 +6,9 @@
 # Local run artefacts
 **/.run/
 **/node_modules/
+**/.next/
+**/out/
+*.tsbuildinfo
 __pycache__/
 
 # Screenshots capture the flag in the page title; excluded deliberately.
