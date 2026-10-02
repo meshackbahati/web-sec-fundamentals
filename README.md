@@ -105,7 +105,7 @@ signature     = base64url( HMAC-SHA256( key, signing_input ) )
 Three properties follow, and each is a real bug somewhere:
 
 1. **The key is the entire security.** Weak keys are cracked offline with
-   `hashcat -a 0 -m 16500 <jwt> <wordlist>` — no requests to the server.
+   `hashcat -a 0 -m 16500 <jwt> <wordlist>`, and no requests to the server.
 2. **The algorithm must be chosen by the server.** If the verifier reads `alg`
    from the token, the attacker picks the verification routine.
 3. **Compare raw bytes.** `Buffer.from(sig, 'base64url')` *decodes* to 32 bytes,
