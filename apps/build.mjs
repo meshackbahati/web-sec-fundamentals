@@ -135,7 +135,7 @@ function packageJson(app) {
       private: true,
       type: 'module',
       scripts: { dev: 'next dev -p 3000', build: 'next build', start: 'next start' },
-      dependencies: { next: '15.1.6', react: '19.0.0', 'react-dom': '19.0.0' },
+      dependencies: { next: '16.3.8', react: '19.2.0', 'react-dom': '19.2.0' },
       engines: { node: '>=22.5.0' },
     },
     null,
