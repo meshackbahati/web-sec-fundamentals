@@ -10,8 +10,6 @@ paths that were deliberately closed.
 
 ---
 
-## Background
-
 Each application is a small Next.js storefront backed by SQLite. They share an
 implementation and a design system, and differ by exactly one marked
 substitution, which `build.mjs` enforces. That arrangement is deliberate: a fix
@@ -19,7 +17,7 @@ applied to one is the fix for all, and the distance between a working
 implementation and a broken one is always a single reviewable line.
 
 All four share one root cause. **The server trusts a claim it never verified.**
-The trust boundary differs, and that is the whole taxonomy:
+What differs is which boundary is crossed:
 
 | Application | The unverified claim |
 |---|---|
@@ -181,7 +179,7 @@ one and confirms the query is reachable at all.
 ## Two details that cost real time
 
 Both make the demonstration fail *quietly*, which is worse than failing
-loudly, and both are worth knowing independently of this application.
+loudly. Both cost time to find.
 
 **`--` ends at the newline.** An earlier version placed the two predicates on
 separate lines:
@@ -227,7 +225,7 @@ rows = db.prepare(sql).all(category);
 An allow-list of permitted categories is a useful second layer.
 Parameterisation is the actual control.
 
-Worth stating plainly: **"we sanitised it" is not a fix.** Escaping single
+**"we sanitised it" is not a fix.** Escaping single
 quotes does not help, because a quote is rarely the only thing an attacker
 needs. Blacklisting `OR`, `UNION` or `--` is a losing game against an encoding
 space far larger than any list. Also suppress the error message.

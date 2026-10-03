@@ -13,7 +13,7 @@ paginate: true
 Everything in this talk is public and in the repository, including the source
 of every application, the reference solutions, and the verification script:
 
-**<https://github.com/meshackbahati/web-sec-fund>**
+**<https://github.com/meshackbahati/web-sec-fundamentals>**
 
 > Authorised testing only. The four applications in this talk are deliberately
 > vulnerable, deployed by me for this demonstration, and contain no real data.
@@ -410,7 +410,7 @@ one to a server that never checked.
 
 <!--
 Type the payload on screen if you can. The 'none' algorithm performing no
-maths whatsoever is the memorable moment.
+maths whatsoever is the part worth landing.
 
 In Burp Suite rather than curl: intercept the POST to /login, read the session
 cookie out of the Set-Cookie header, then send GET /admin to Repeater with that
@@ -589,7 +589,7 @@ In Burp Suite: intercept GET /catalogue?category=Home and send it to Repeater.
 Edit the parameter value to Home' OR 1=1-- and resend. Repeater shows the row
 count changing with the response size in the footer, which is a quick sanity
 check that the injection did something before you read the body. sqlmap finds
-this unaided, so it is worth running once as confirmation:
+this unaided, and running it once is a useful confirmation:
 sqlmap -u "$BASE/catalogue?category=Home" --batch --risk=2 --level=3
 -->
 
@@ -950,7 +950,7 @@ token header, in a SQL string, in an HTML page, and in a key lookup.
 
 # Everything here is public
 
-**<https://github.com/meshackbahati/web-sec-fund>**
+**<https://github.com/meshackbahati/web-sec-fundamentals>**
 
 | In the repository | What it is |
 |---|---|

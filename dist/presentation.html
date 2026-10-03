@@ -14,7 +14,7 @@
 <p><strong>Bahati</strong> · Saturday 3 October 2026</p>
 <p>Everything in this talk is public and in the repository, including the source<br />
 of every application, the reference solutions, and the verification script:</p>
-<p><strong><a href="https://github.com/meshackbahati/web-sec-fund">https://github.com/meshackbahati/web-sec-fund</a></strong></p>
+<p><strong><a href="https://github.com/meshackbahati/web-sec-fundamentals">https://github.com/meshackbahati/web-sec-fundamentals</a></strong></p>
 <blockquote>
 <p>Authorised testing only. The four applications in this talk are deliberately<br />
 vulnerable, deployed by me for this demonstration, and contain no real data.</p>
@@ -740,7 +740,7 @@ token header, in a SQL string, in an HTML page, and in a key lookup.</p>
 </section>
 </foreignObject></svg><svg data-marpit-svg="" viewBox="0 0 1280 720"><foreignObject width="1280" height="720"><section id="37" data-paginate="true" data-theme="default" lang="en-US" data-marpit-pagination="37" style="--paginate:true;--theme:default;" data-marpit-pagination-total="39">
 <h1 id="everything-here-is-public">Everything here is public</h1>
-<p><strong><a href="https://github.com/meshackbahati/web-sec-fund">https://github.com/meshackbahati/web-sec-fund</a></strong></p>
+<p><strong><a href="https://github.com/meshackbahati/web-sec-fundamentals">https://github.com/meshackbahati/web-sec-fundamentals</a></strong></p>
 <table>
 <thead>
 <tr>
@@ -826,7 +826,7 @@ one character invalidates it.</p></div><div class="bespoke-marp-note" data-index
 mistake: trusting the token's algorithm at all.</p></div><div class="bespoke-marp-note" data-index="11" tabindex="0"><p>Each is a separate application with its own look, so the audience can see they
 are not four aliases of one lab. Same underlying idea each time.</p></div><div class="bespoke-marp-note" data-index="12" tabindex="0"><p>Count the lines. The whole authorisation boundary in this application is one
 comparison. Emphasise how little code has to be exactly right.</p></div><div class="bespoke-marp-note" data-index="14" tabindex="0"><p>Type the payload on screen if you can. The 'none' algorithm performing no
-maths whatsoever is the memorable moment.
+maths whatsoever is the part worth landing.
 
 In Burp Suite rather than curl: intercept the POST to /login, read the session
 cookie out of the Set-Cookie header, then send GET /admin to Repeater with that
@@ -844,7 +844,7 @@ are here so nobody in the audience loses twenty minutes to them.</p></div><div c
 Edit the parameter value to Home' OR 1=1-- and resend. Repeater shows the row
 count changing with the response size in the footer, which is a quick sanity
 check that the injection did something before you read the body. sqlmap finds
-this unaided, so it is worth running once as confirmation:
+this unaided, and running it once is a useful confirmation:
 sqlmap -u &quot;$BASE/catalogue?category=Home&quot; --batch --risk=2 --level=3</p></div><div class="bespoke-marp-note" data-index="22" tabindex="0"><p>Key sentence: the browser cannot tell the difference between text you wrote
 and an instruction you wrote. That is why the fix is encoding.</p></div><div class="bespoke-marp-note" data-index="23" tabindex="0"><p>Encoding is data-side, not input-side. You do not clean input on the way in;
 you encode on the way out. Repeat that twice.</p></div><div class="bespoke-marp-note" data-index="24" tabindex="0"><p>This is why a browser is required and a curl loop is not. The proof of impact
