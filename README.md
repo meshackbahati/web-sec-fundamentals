@@ -238,9 +238,9 @@ real data and should be removed once the event is over.
 |---|---|
 | `presentation.md` | source, with speaker notes |
 | `dist/presentation.html` | present from, interactive. Press `s` for speaker notes |
-| `dist/presentation.pdf` | 39 pages, clickable links, for sharing or a fallback |
+| `dist/Web-Security-Fundamentals.pdf` | 39 pages, clickable links, for sharing or a fallback |
 
-Regenerate with `marp presentation.md --pdf -o dist/presentation.pdf`. Marp
+Regenerate with `marp presentation.md --pdf -o dist/Web-Security-Fundamentals.pdf`. Marp
 needs a Chromium binary; on this machine Playwright's is used:
 
 ```bash
