@@ -10,6 +10,11 @@ paginate: true
 
 **Bahati** · Saturday 3 October 2026
 
+Everything in this talk is public and in the repository, including the source
+of every application, the reference solutions, and the verification script:
+
+**<https://github.com/meshackbahati/web-sec-fund>**
+
 > Authorised testing only. The four applications in this talk are deliberately
 > vulnerable, deployed by me for this demonstration, and contain no real data.
 
@@ -275,7 +280,7 @@ are not four aliases of one lab. Same underlying idea each time.
 
 # Demo 1: Session Forge
 
-**`https://northwind-01-session-forge.vercel.app`**
+**<https://northwind-01-session-forge.vercel.app>**
 
 Sign in as a normal employee. The goal is the administration page.
 
@@ -490,7 +495,7 @@ defence away, take this one.
 
 # Demo 2: Clearance
 
-**`https://northwind-02-clearance.vercel.app`**
+**<https://northwind-02-clearance.vercel.app>**
 
 No login needed. The catalogue filter is the whole target. Built in
 `apps/02-clearance/app/catalogue/route.js`:
@@ -660,7 +665,7 @@ you encode on the way out. Repeat that twice.
 
 # Demo 3: Reflector
 
-**`https://northwind-03-reflector.vercel.app`**
+**<https://northwind-03-reflector.vercel.app>**
 
 `app/search/route.js` contains both renderings of the same value, some
 lines apart:
@@ -783,7 +788,7 @@ uses. That is the whole defect.
 
 # Demo 4: Keyring
 
-**`https://northwind-04-keyring.vercel.app`**
+**<https://northwind-04-keyring.vercel.app>**
 
 From `apps/04-keyring/lib/store.js`:
 
@@ -943,15 +948,34 @@ token header, in a SQL string, in an HTML page, and in a key lookup.
 
 ---
 
+# Everything here is public
+
+**<https://github.com/meshackbahati/web-sec-fund>**
+
+| In the repository | What it is |
+|---|---|
+| `apps/01-session-forge` … `apps/04-keyring` | the four applications, with a `WRITEUP.md` beside each |
+| `apps/CHALLENGES.md` | all four write-ups together, with the shared mechanisms |
+| `apps/solve/` | the reference solutions and `verify.sh`, thirteen checks |
+| `apps/build.mjs` | regenerates all four from one implementation |
+| `apps/deploy.sh` | deploys all four and sets their flags as secrets |
+
+Clone it and run `bash apps/solve/verify.sh` to see every attack in this talk
+execute against the live deployments.
+
+---
+
 # Resources
 
 - **PortSwigger Web Security Academy**, free legal labs:
-  https://portswigger.net/web-security
+  <https://portswigger.net/web-security>
 - **OWASP Cheat Sheet Series**, the practical reference:
-  https://cheatsheetseries.owasp.org
-- **RFC 7519** (JWT), **RFC 7515** (JWS)
-- **MDN**: HTTP, cookies, CSP, CORS
-- Four of these challenges have public write-ups in this repository
+  <https://cheatsheetseries.owasp.org>
+- **RFC 7519** (JWT) and **RFC 7515** (JWS):
+  <https://www.rfc-editor.org/rfc/rfc7519>
+- **MDN**: HTTP, cookies, CSP, CORS:
+  <https://developer.mozilla.org>
+- Live targets, one per application: `apps/deployments.md` in the repository
 
 ---
 

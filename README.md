@@ -230,3 +230,22 @@ These targets exist to be attacked and contain real defects. Use them on your
 own deployments, on systems you own, or with written permission. The
 deployments are publicly reachable so a live demonstration works; they hold no
 real data and should be removed once the event is over.
+---
+
+## Presentation artefacts
+
+| File | Use |
+|---|---|
+| `presentation.md` | source, with speaker notes |
+| `dist/presentation.html` | present from, interactive. Press `s` for speaker notes |
+| `dist/presentation.pdf` | 39 pages, clickable links, for sharing or a fallback |
+
+Regenerate with `marp presentation.md --pdf -o dist/presentation.pdf`. Marp
+needs a Chromium binary; on this machine Playwright's is used:
+
+```bash
+export CHROME_PATH="$HOME/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome"
+```
+
+Speaker notes do not survive PDF export in this Marp build. They are in the
+Markdown and in the HTML overlay.
